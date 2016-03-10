@@ -49,7 +49,7 @@ void main(void) {
     R = calculate(R, A);
 
     for (i = 0; i < n; ++i){
-        printf("%f ", R[i]);
+    //    printf("%f ", R[i]);
     }
     printf("\n");
 
@@ -61,8 +61,8 @@ double* calculate(double *r, node *A) {
     double *r_pre;
     r_pre = malloc(n * sizeof(double));
     double damp_const = (1.0 - DAMPING_FACTOR) / n;
-
-    while(rel_error(r, r_pre, n) >= EPSILON) {
+    printf("%s\n", "Hello");
+    do {
         // Save previous values
         for (i = 0; i < n; ++i) {
             r_pre[i] = r[i];
@@ -73,8 +73,11 @@ double* calculate(double *r, node *A) {
                 r[i] += r_pre[A[i].Di[j]] / A[A[i].Di[j]].li;
             r[i] *= DAMPING_FACTOR;
             r[i] += damp_const;
+            printf("%f ", r[i]);
+
         }
-    }
+    } while(rel_error(r, r_pre, n) >= EPSILON);
+    printf("%s\n", "Goodbye");
 
     free(r_pre);
 
