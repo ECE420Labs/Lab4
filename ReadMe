@@ -3,7 +3,7 @@ Mar. 2016
 
 =====
 Overview:
-    There are two groups of scripts in this kit
+    There are three groups of scripts in this kit
     
 -----
     Data selection program and original data:
@@ -18,8 +18,7 @@ Overview:
 
 -----
     Verification program:
-    The lovely "serialtester.c" is still under testing. It is the time to challenge your skill of testing. You will be notified when it is uploaded.
-
+    serialtester.c source file for the testing program, depending on the Lab4IO.c
 =====
 Please also find the detailed instructions in the comments of the individual files.
 Web Graph data is from http://snap.stanford.edu/data/web-Stanford.html
