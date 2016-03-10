@@ -51,12 +51,13 @@ void main(void) {
     GET_TIME(start);
     R = calculate(R, A);
     GET_TIME(end);
-    /*
+
     for (i = 0; i < n; ++i){
-        printf("%f ", R[i]);
+        //printf("%f ", R[i]);
+        printf("%d %d %d \n", A[i].Di[(A[i].size_Di)-1], A[i].size_Di, A[i].li);
     }
     printf("\n");
-    */
+
 
     Lab4_saveoutput(R, n, end-start);
 
@@ -67,17 +68,20 @@ double* calculate(double *r, node *A) {
     int i, j;
     double *r_pre;
     r_pre = malloc(n * sizeof(double));
-    double damp_const = (1.0 - DAMPING_FACTOR) / n;
+    double damp_const;
+    damp_const = (1.0 - DAMPING_FACTOR) / n;
 
     do {
         // Save previous values
-        for (i = 0; i < n; ++i) {
+        for (i = 0; i < n; i++) {
             r_pre[i] = r[i];
         }
-        for ( i = 0; i < n; ++i){
+        // Calculate new
+        for ( i = 0; i < n; i++){
             r[i] = 0;
-            for ( j = 0; j < A[i].size_Di; ++j)
+            for ( j = 0; j < A[i].size_Di; ++j) {
                 r[i] += r_pre[A[i].Di[j]] / A[A[i].Di[j]].li;
+            }
             r[i] *= DAMPING_FACTOR;
             r[i] += damp_const;
         }

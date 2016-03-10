@@ -82,6 +82,12 @@ int main (int argc, char* argv[]){
     }while(rel_error(r, r_pre, nodecount) >= EPSILON);
     //printf("Program converges at %d th iteration.\n", iterationcount);
 
+    for (i = 0; i < nodecount; ++i){
+        //printf("%f ", r[i]);
+        printf("%d %d %d \n", nodehead[i].inlinks[(nodehead[i].num_in_links)-1], nodehead[i].num_in_links, nodehead[i].num_out_links);
+    }
+    printf("\n");
+
     // post processing
     node_destroy(nodehead, nodecount);
     free(num_in_links); free(num_out_links);
