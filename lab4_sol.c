@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include "timer.h"
 #include "Lab4_IO.h"
 
 #define EPSILON 0.00001
@@ -19,9 +20,10 @@ int n; // number of nodes
 void main(void) {
     FILE *ip;
     int i,j;
-    int src, dest;
+    int src, dest;  // For reading in node data from file
     node *A;        // node data struct
     double *R;      // result
+    double start, end; // for time
 
     if ((ip = fopen("data_input","r")) == NULL){
         printf("error opening the input data.\n");
@@ -46,12 +48,17 @@ void main(void) {
         (A[src].li)++;
     }
 
+    GET_TIME(start);
     R = calculate(R, A);
-
+    GET_TIME(end);
+    /*
     for (i = 0; i < n; ++i){
-    //    printf("%f ", R[i]);
+        printf("%f ", R[i]);
     }
     printf("\n");
+    */
+
+    Lab4_saveoutput(R, n, end-start);
 
     free(A); free(R);
 }
@@ -61,7 +68,7 @@ double* calculate(double *r, node *A) {
     double *r_pre;
     r_pre = malloc(n * sizeof(double));
     double damp_const = (1.0 - DAMPING_FACTOR) / n;
-    printf("%s\n", "Hello");
+
     do {
         // Save previous values
         for (i = 0; i < n; ++i) {
@@ -73,11 +80,8 @@ double* calculate(double *r, node *A) {
                 r[i] += r_pre[A[i].Di[j]] / A[A[i].Di[j]].li;
             r[i] *= DAMPING_FACTOR;
             r[i] += damp_const;
-            printf("%f ", r[i]);
-
         }
     } while(rel_error(r, r_pre, n) >= EPSILON);
-    printf("%s\n", "Goodbye");
 
     free(r_pre);
 
