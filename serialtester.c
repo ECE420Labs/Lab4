@@ -69,22 +69,28 @@ int main (int argc, char* argv[]){
         r[i] = 1.0 / nodecount;
     damp_const = (1.0 - DAMPING_FACTOR) / nodecount;
     // CORE CALCULATION
-    do{
+    do {
         ++iterationcount;
         vec_cp(r, r_pre, nodecount);
         for ( i = 0; i < nodecount; ++i){
             r[i] = 0;
-            for ( j = 0; j < nodehead[i].num_in_links; ++j)
+            for ( j = 0; j < nodehead[i].num_in_links; ++j) {
                 r[i] += r_pre[nodehead[i].inlinks[j]] / num_out_links[nodehead[i].inlinks[j]];
+            }
             r[i] *= DAMPING_FACTOR;
             r[i] += damp_const;
         }
-    }while(rel_error(r, r_pre, nodecount) >= EPSILON);
+    } while(rel_error(r, r_pre, nodecount) >= EPSILON);
     //printf("Program converges at %d th iteration.\n", iterationcount);
 
     for (i = 0; i < nodecount; ++i){
         //printf("%f ", r[i]);
-        printf("%d %d %d \n", nodehead[i].inlinks[(nodehead[i].num_in_links)-1], nodehead[i].num_in_links, nodehead[i].num_out_links);
+        //printf("%d: %d %d %d \n", i, nodehead[i].inlinks[(nodehead[i].num_in_links)-1], nodehead[i].num_in_links, nodehead[i].num_out_links);
+        //printf("%d: %d %d \n", i, num_in_links[i], num_out_links[i]);
+        /*for (j = 0; j < num_in_links[i]; ++j) {
+            printf("%d ", nodehead[i].inlinks[j]);
+        }
+        printf("\n");*/
     }
     printf("\n");
 
