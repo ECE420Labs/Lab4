@@ -11,6 +11,8 @@ typedef struct {
 } node;
 
 int calculate(double *r, node *A);
+double rel_err(double *r, double *t, int size);
+
 int n; // number of nodes
 
 #define EPSILON 0.00001
@@ -76,28 +78,6 @@ int calculate(double *r, node *A) {
     double damp_const;
     damp_const = (1.0 - DAMPING_FACTOR) / n;
 
-    /*do {
-        // Save previous values
-
-        vec_cp(r, r_pre, n);
-        // Calculate new
-        for ( i = 0; i < n; i++){
-            //for (i = 0; i < n; ++i){
-            //    printf("%d ", A[i]);
-            //}
-            printf("%f ", r_pre[i]);
-            r[i] = 0;
-            for ( j = 0; j < A[i].size_Di; ++j) {
-
-
-                r[i] += r_pre[A[i].Di[j]] / A[A[i].Di[j]].li;
-            }
-            r[i] *= DAMPING_FACTOR;
-            r[i] += damp_const;
-            printf("%f \n", r[i]);
-        }
-    } while(rel_error(r, r_pre, n) >= EPSILON); */
-
     do {
         vec_cp(r, r_pre, n);
         for ( i = 0; i < n; ++i){
@@ -108,9 +88,19 @@ int calculate(double *r, node *A) {
             r[i] *= DAMPING_FACTOR;
             r[i] += damp_const;
         }
-    } while(rel_error(r, r_pre, n) >= EPSILON);
+    } while(rel_err(r, r_pre, n) >= EPSILON);
 
     free(r_pre);
 
     return 0;
+}
+
+double rel_err(double *r, double *t, int size){
+    int i;
+    double norm_diff = 0, norm_vec = 0;
+    for (i = 0; i < size; ++i){
+        norm_diff += (r[i] - t[i]) * (r[i] - t[i]);
+        norm_vec += t[i] * t[i];
+    }
+    return sqrt(norm_diff)/sqrt(norm_vec);
 }

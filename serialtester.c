@@ -80,6 +80,8 @@ int main (int argc, char* argv[]){
             r[i] *= DAMPING_FACTOR;
             r[i] += damp_const;
         }
+        printf("%f \n", rel_error(r, r_pre, nodecount));
+
     } while(rel_error(r, r_pre, nodecount) >= EPSILON);
     //printf("Program converges at %d th iteration.\n", iterationcount);
 
