@@ -55,6 +55,8 @@ void main(void) {
     calculate(R, A);
     GET_TIME(end);
 
+    printf("%f", end-start);
+
     for (i = 0; i < n; ++i){
         //printf("%f ", R[i]);
         //printf("%d: %d %d %d \n", i, A[i].Di[(A[i].size_Di)-1], A[i].size_Di, A[i].li);
@@ -94,6 +96,8 @@ int calculate(double *r, node *A) {
 
     return 0;
 }
+
+
 
 double rel_err(double *r, double *t, int size){
     int i;
