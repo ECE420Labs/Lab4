@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <mpi.h>
 #include "timer.h"
 #include "Lab4_IO.h"
 
@@ -12,15 +13,16 @@ typedef struct {
 
 int calculate(double *r, node *A);
 double rel_err(double *r, double *t, int size);
+int backup_vec(double *r, double *t, int size);
 
 int n; // number of nodes
 
 #define EPSILON 0.00001
 #define DAMPING_FACTOR 0.85
 
-void main(void) {
+int main(void) {
     FILE *ip;
-    int i,j;
+    int i;
     int src, dest;  // For reading in node data from file
     node *A;        // node data struct
     double *R;      // result
@@ -51,6 +53,7 @@ void main(void) {
 
     fclose(ip);
 
+
     GET_TIME(start);
     calculate(R, A);
     GET_TIME(end);
@@ -71,33 +74,60 @@ void main(void) {
     Lab4_saveoutput(R, n, end-start);
 
     free(A); free(R);
+
+    return 0;
 }
 
 int calculate(double *r, node *A) {
     int i, j;
     double *r_pre;
-    r_pre = malloc(n * sizeof(double));
     double damp_const;
     damp_const = (1.0 - DAMPING_FACTOR) / n;
+    int my_rank, comm_sz, local_n;
 
-    do {
-        vec_cp(r, r_pre, n);
-        for ( i = 0; i < n; ++i){
-            r[i] = 0.0;
+    MPI_Init(NULL, NULL);
+
+    /* Get my process rank */
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+
+    /* Find out how many processes are being used */
+    MPI_Comm_size(MPI_COMM_WORLD, &comm_sz);
+
+    r_pre = malloc(n * sizeof(double));
+
+    local_n = n / comm_sz;
+    //double *sendbuff = malloc(local_n * sizeof(double));
+    //double *recvbuff = malloc(local_n * sizeof(double));
+
+    int still_err = 1;
+    double *local_r = malloc(n * sizeof(double));
+
+    while (still_err) {
+        backup_vec(r, r_pre, n);
+        for ( i = local_n * my_rank; i < local_n * (my_rank + 1); ++i) {
+            local_r[i] = 0.0;
             for ( j = 0; j < A[i].size_Di; ++j) {
-                r[i] += r_pre[A[i].Di[j]] / A[A[i].Di[j]].li;
+                local_r[i] += r_pre[A[i].Di[j]] / A[A[i].Di[j]].li;
             }
-            r[i] *= DAMPING_FACTOR;
-            r[i] += damp_const;
+            local_r[i] *= DAMPING_FACTOR;
+            local_r[i] += damp_const;
         }
-    } while(rel_err(r, r_pre, n) >= EPSILON);
+        MPI_Allgather(local_r, local_n, MPI_DOUBLE, r, local_n, MPI_DOUBLE, MPI_COMM_WORLD);
+        if (my_rank == 0) {
+             if (rel_err(r, r_pre, n) < EPSILON) {
+                 still_err = 0;
+             }
+        }
+        MPI_Bcast(&still_err, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    }
+    //while (rel_err(r, r_pre, n) >= EPSILON);
 
     free(r_pre);
 
+    MPI_Finalize();
+
     return 0;
 }
-
-
 
 double rel_err(double *r, double *t, int size){
     int i;
@@ -107,4 +137,10 @@ double rel_err(double *r, double *t, int size){
         norm_vec += t[i] * t[i];
     }
     return sqrt(norm_diff)/sqrt(norm_vec);
+}
+
+int backup_vec(double *r, double *t, int size){
+    int i;
+    for (i = 0; i < size; ++i) t[i] = r[i];
+    return 0;
 }
