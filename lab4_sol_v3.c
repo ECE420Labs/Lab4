@@ -31,7 +31,9 @@ int main(void) {
     if ((ip = fopen("data_input","r")) == NULL){
         printf("error opening the input data.\n");
     }
-    fscanf(ip, "%d\n", &n);
+    if (!fscanf(ip, "%d\n", &n)) {
+        printf("%s\n", "Read error");
+    }
 
     A = malloc(n * sizeof(node));
     for (i = 0; i < n; i++) {
@@ -45,7 +47,9 @@ int main(void) {
     }
 
     while(!feof(ip)){
-        fscanf(ip, "%d\t%d\n", &src, &dest);
+        if (!fscanf(ip, "%d\t%d\n", &src, &dest)) {
+            printf("%s\n", "Read error");
+        }
         A[dest].Di[A[dest].size_Di] = src;
         (A[dest].size_Di)++;
         (A[src].li)++;
@@ -114,11 +118,11 @@ int calculate(double *r, node *A) {
         }
         MPI_Allgather(local_r, local_n, MPI_DOUBLE, r, local_n, MPI_DOUBLE, MPI_COMM_WORLD);
         if (my_rank == 0) {
-             if (rel_err(r, r_pre, n) < EPSILON) {
-                 still_err = 0;
-             }
+            if (rel_err(r, r_pre, n) < EPSILON) {
+                still_err = 0;
+                MPI_Bcast(&still_err, 1, MPI_INT, 0, MPI_COMM_WORLD);
+            }
         }
-        MPI_Bcast(&still_err, 1, MPI_INT, 0, MPI_COMM_WORLD);
     }
     //while (rel_err(r, r_pre, n) >= EPSILON);
 

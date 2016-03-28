@@ -47,7 +47,9 @@ int get_node_stat(int *nodecount, int **num_in_links, int **num_out_links){
         printf("Error opening the input file.\n");
         return 1;
     }
-    fscanf(ip, "%d\n", nodecount);
+    if (!fscanf(ip, "%d\n", nodecount)) {
+        printf("%s\n", "Read error");
+    }
     //fscanf(ip, "%d\n", &Ecount);
     (*num_in_links) = malloc((*nodecount) * sizeof(int));
     (*num_out_links) = malloc((*nodecount) * sizeof(int));
@@ -56,7 +58,9 @@ int get_node_stat(int *nodecount, int **num_in_links, int **num_out_links){
         (*num_out_links)[i] = 0;
     }
     while(!feof(ip)){
-        fscanf(ip, "%d\t%d\n", &src, &dst);
+        if (!fscanf(ip, "%d\t%d\n", &src, &dst)) {
+            printf("%s\n", "Read error");
+        }
         ++(*num_in_links)[dst]; ++(*num_out_links)[src];
     }
     fclose(ip);
@@ -88,10 +92,14 @@ int node_init(struct node **nodehead, int *num_in_links, int *num_out_links, int
         printf("Error opening the input file.\n");
         return 1;
     }
-    fscanf(ip, "%d\n", &i);
+    if (!fscanf(ip, "%d\n", &i)) {
+        printf("%s\n", "Read error");
+    }
     // normal case
     while(!feof(ip)){
-        fscanf(ip, "%d\t%d\n", &src, &dst);
+        if (!fscanf(ip, "%d\t%d\n", &src, &dst)) {
+            printf("%s\n", "Read error");
+        }
         if (dst >= start && dst < end)
             (*nodehead)[dst - start].inlinks[index[dst - start]++] = src;
     }
