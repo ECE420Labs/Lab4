@@ -26,7 +26,6 @@ int main(void) {
     int src, dest;  // For reading in node data from file
     node *A;        // node data struct
     double *R;      // result
-    double start, end; // for time
 
     if ((ip = fopen("data_input","r")) == NULL){
         printf("error opening the input data.\n");
@@ -57,12 +56,9 @@ int main(void) {
 
     fclose(ip);
 
-
-    GET_TIME(start);
     calculate(R, A);
-    GET_TIME(end);
 
-    printf("%f", end-start);
+    //printf("%f", calc_time);
 
     for (i = 0; i < n; ++i){
         //printf("%f ", R[i]);
@@ -74,8 +70,7 @@ int main(void) {
     }
     printf("\n");
 
-
-    Lab4_saveoutput(R, n, end-start);
+    //Lab4_saveoutput(R, n, calc_time);
 
     free(A); free(R);
 
@@ -88,8 +83,9 @@ int calculate(double *r, node *A) {
     double damp_const;
     damp_const = (1.0 - DAMPING_FACTOR) / n;
     int my_rank, comm_sz, local_n;
+    double start = 0, end = 0; // for time
 
-    r_pre = malloc(n * sizeof(double));
+    //r_pre = malloc(n * sizeof(double));
 
     MPI_Init(NULL, NULL);
 
@@ -99,37 +95,53 @@ int calculate(double *r, node *A) {
     /* Find out how many processes are being used */
     MPI_Comm_size(MPI_COMM_WORLD, &comm_sz);
 
-//    r_pre = malloc(n * sizeof(double));
+    r_pre = malloc(n * sizeof(double));
 
     local_n = n / comm_sz;
     //double *sendbuff = malloc(local_n * sizeof(double));
     //double *recvbuff = malloc(local_n * sizeof(double));
 
-    int still_err = 1;
-    double *local_r = malloc(n * sizeof(double));
+    double still_err = 1;
+    double *local_r = malloc(local_n * sizeof(double));
 
-    while (still_err) {
-        backup_vec(r, r_pre, n);
-        for ( i = local_n * my_rank; i < local_n * (my_rank + 1); ++i) {
-            local_r[i] = 0.0;
+    if (my_rank == 0) {
+        GET_TIME(start);
+    }
+    while (still_err > EPSILON) {
+        //if (my_rank == 0) {
+            backup_vec(r, r_pre, n);
+        //}
+        for ( i = local_n * my_rank; i < local_n * (my_rank + 1); i++) {
+            local_r[i - local_n * my_rank] = 0.0;
             for ( j = 0; j < A[i].size_Di; ++j) {
-                local_r[i] += r_pre[A[i].Di[j]] / A[A[i].Di[j]].li;
+                local_r[i - local_n * my_rank] += r_pre[A[i].Di[j]] / A[A[i].Di[j]].li;
             }
-            local_r[i] *= DAMPING_FACTOR;
-            local_r[i] += damp_const;
+            local_r[i - local_n * my_rank] *= DAMPING_FACTOR;
+            local_r[i - local_n * my_rank] += damp_const;
         }
         MPI_Allgather(local_r, local_n, MPI_DOUBLE, r, local_n, MPI_DOUBLE, MPI_COMM_WORLD);
-        if (my_rank == 0) {
-            if (rel_err(r, r_pre, n) < EPSILON) {
-                still_err = 0;
-                //MPI_Bcast(&still_err, 1, MPI_INT, 0, MPI_COMM_WORLD);
-                MPI_Finalize();
-            }
+         if (my_rank == 0) {
+        //     printf("%f\n", rel_err(r, r_pre, n));
+        // }
+            //if (rel_err(r, r_pre, n) < EPSILON) {
+                still_err = rel_err(r, r_pre, n);
+            //}
         }
+            MPI_Bcast(&still_err, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+            //printf("Still err %d proces %d\n", still_err, my_rank);
+            //printf("%f\n", rel_err(r, r_pre, n));
+        //}
     }
-    //while (rel_err(r, r_pre, n) >= EPSILON);
-
+    if (my_rank == 0) {
+        GET_TIME(end);
+        printf("%f", end-start);
+        Lab4_saveoutput(r, n, end-start);
+    }
     free(r_pre);
+
+    //while (rel_err(r, r_pre, n) >= EPSILON);
+    MPI_Finalize();
+
 
     //MPI_Finalize();
 
