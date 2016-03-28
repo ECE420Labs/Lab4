@@ -58,20 +58,6 @@ int main(void) {
 
     calculate(R, A);
 
-    //printf("%f", calc_time);
-
-    for (i = 0; i < n; ++i){
-        //printf("%f ", R[i]);
-        //printf("%d: %d %d %d \n", i, A[i].Di[(A[i].size_Di)-1], A[i].size_Di, A[i].li);
-        /*for (j = 0; j < A[i].size_Di; ++j) {
-            printf("%d ", A[i].Di[j]);
-        }
-        printf("\n");*/
-    }
-    printf("\n");
-
-    //Lab4_saveoutput(R, n, calc_time);
-
     free(A); free(R);
 
     return 0;
@@ -98,8 +84,6 @@ int calculate(double *r, node *A) {
     r_pre = malloc(n * sizeof(double));
 
     local_n = n / comm_sz;
-    //double *sendbuff = malloc(local_n * sizeof(double));
-    //double *recvbuff = malloc(local_n * sizeof(double));
 
     double still_err = 1;
     double *local_r = malloc(local_n * sizeof(double));
@@ -108,9 +92,7 @@ int calculate(double *r, node *A) {
         GET_TIME(start);
     }
     while (still_err > EPSILON) {
-        //if (my_rank == 0) {
-            backup_vec(r, r_pre, n);
-        //}
+        backup_vec(r, r_pre, n);
         for ( i = local_n * my_rank; i < local_n * (my_rank + 1); i++) {
             local_r[i - local_n * my_rank] = 0.0;
             for ( j = 0; j < A[i].size_Di; ++j) {
@@ -120,30 +102,20 @@ int calculate(double *r, node *A) {
             local_r[i - local_n * my_rank] += damp_const;
         }
         MPI_Allgather(local_r, local_n, MPI_DOUBLE, r, local_n, MPI_DOUBLE, MPI_COMM_WORLD);
-         if (my_rank == 0) {
-        //     printf("%f\n", rel_err(r, r_pre, n));
-        // }
-            //if (rel_err(r, r_pre, n) < EPSILON) {
-                still_err = rel_err(r, r_pre, n);
-            //}
+        if (my_rank == 0) {
+            still_err = rel_err(r, r_pre, n);
         }
-            MPI_Bcast(&still_err, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-            //printf("Still err %d proces %d\n", still_err, my_rank);
-            //printf("%f\n", rel_err(r, r_pre, n));
-        //}
+        MPI_Bcast(&still_err, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
     }
     if (my_rank == 0) {
         GET_TIME(end);
-        printf("%f", end-start);
+        printf("%f\n", end-start);
         Lab4_saveoutput(r, n, end-start);
     }
     free(r_pre);
 
-    //while (rel_err(r, r_pre, n) >= EPSILON);
     MPI_Finalize();
-
-
-    //MPI_Finalize();
 
     return 0;
 }
