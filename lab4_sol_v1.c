@@ -102,11 +102,7 @@ int calculate(double *r, node *A) {
             local_r[i - local_n * my_rank] += damp_const;
         }
         MPI_Allgather(local_r, local_n, MPI_DOUBLE, r, local_n, MPI_DOUBLE, MPI_COMM_WORLD);
-        if (my_rank == 0) {
-            still_err = rel_err(r, r_pre, n);
-        }
-        MPI_Bcast(&still_err, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-
+        still_err = rel_err(r, r_pre, n);
     }
     if (my_rank == 0) {
         GET_TIME(end);
